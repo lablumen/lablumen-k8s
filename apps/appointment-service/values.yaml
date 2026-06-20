@@ -1,0 +1,42 @@
+image:
+  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/appointment-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  port: 80
+  targetPort: 8000
+
+serviceAccount:
+  name: appointment-service
+  # IRSA role ARN (from Terraform identity module) is injected here in real deploys.
+  annotations: {}
+
+# Secret populated by the Secrets Store CSI driver from AWS Secrets Manager.
+envSecretName: appointment-service-secrets
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  className: alb
+  host: api.lablumen.example
+  path: /api/v1
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: lablumen

@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notification-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rnld101/lablumen.git
+    targetRevision: main
+    path: k8s/apps/notification-service
+    helm: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lablumen
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

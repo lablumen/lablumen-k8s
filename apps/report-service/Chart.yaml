@@ -1,0 +1,6 @@
+apiVersion: v2
+name: report-service
+description: LabLumen report-service (S3 presign + document-scoped RAG chat)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

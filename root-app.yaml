@@ -1,0 +1,28 @@
+# App-of-apps root. Bootstrap once (kubectl apply -f k8s/root-app.yaml) after ArgoCD is installed.
+# It registers every child Application under applications/ (service charts) and platform-addons/
+# (upstream addon charts), ignoring the chart directories themselves.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lablumen-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rnld101/lablumen.git
+    targetRevision: main
+    path: k8s
+    directory:
+      recurse: true
+      include: "{applications/*.yaml,platform-addons/*.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

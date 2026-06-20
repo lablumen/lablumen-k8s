@@ -1,0 +1,39 @@
+image:
+  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/notification-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  port: 80
+  targetPort: 8000
+
+serviceAccount:
+  name: notification-service
+  # IRSA role ARN (SQS consume + SES send) from Terraform is injected here.
+  annotations: {}
+
+envSecretName: notification-service-secrets
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+# Background SQS consumer — no public ingress.
+ingress:
+  enabled: false
+  className: alb
+  host: ""
+  path: /
+  annotations: {}

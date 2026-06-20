@@ -1,0 +1,43 @@
+image:
+  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/report-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  port: 80
+  targetPort: 8000
+
+serviceAccount:
+  name: report-service
+  # IRSA role ARN (S3 + Bedrock) from Terraform identity module is injected here.
+  annotations: {}
+
+envSecretName: report-service-secrets
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  className: alb
+  host: api.lablumen.example
+  # More specific than appointment-service's /api/v1, so it wins routing for report endpoints.
+  path: /api/v1/reports
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: lablumen
+    alb.ingress.kubernetes.io/group.order: "10"

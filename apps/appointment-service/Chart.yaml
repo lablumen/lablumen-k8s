@@ -1,0 +1,6 @@
+apiVersion: v2
+name: appointment-service
+description: LabLumen appointment-service (scheduling, lab-test catalog, slot-locks)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

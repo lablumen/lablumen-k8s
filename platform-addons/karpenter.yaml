@@ -1,0 +1,26 @@
+# Karpenter: dynamic node provisioning. IAM role / instance profile / interruption queue are
+# created by terraform/modules/eks (karpenter submodule); values below reference the cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: public.ecr.aws/karpenter
+    chart: karpenter
+    targetRevision: 1.0.6
+    helm:
+      values: |
+        settings:
+          clusterName: lablumen-eks
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

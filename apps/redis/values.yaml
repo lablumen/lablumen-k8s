@@ -1,0 +1,14 @@
+# Self-hosted Redis (no ElastiCache). State here is rebuildable (JWKS keys, short-lived slot
+# locks), so a single ephemeral replica is acceptable.
+image:
+  repository: redis
+  tag: "7-alpine"
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
