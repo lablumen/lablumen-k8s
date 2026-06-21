@@ -1,18 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: report-service
+  name: cluster-config
   namespace: argocd
+  annotations:
+    # Wave 1 ensures ESO CRDs are installed before ClusterSecretStore resources are applied.
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
     repoURL: https://github.com/lablumen/lablumen-k8s.git
     targetRevision: main
-    path: apps/report-service
-    helm: {}
+    path: platform-config
   destination:
     server: https://kubernetes.default.svc
-    namespace: lablumen
+    namespace: external-secrets
   syncPolicy:
     automated:
       prune: true

@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/rnld101/lablumen.git
+    repoURL: https://github.com/lablumen/lablumen-k8s.git
     targetRevision: main
-    path: k8s/apps/appointment-service
+    path: apps/appointment-service
     helm: {}
   destination:
     server: https://kubernetes.default.svc

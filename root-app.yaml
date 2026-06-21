@@ -11,9 +11,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/rnld101/lablumen.git
+    repoURL: https://github.com/lablumen/lablumen-k8s.git
     targetRevision: main
-    path: k8s
+    path: .
     directory:
       recurse: true
       include: "{applications/*.yaml,platform-addons/*.yaml}"

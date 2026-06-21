@@ -14,7 +14,7 @@ serviceAccount:
   # IRSA role ARN (from Terraform identity module) is injected here in real deploys.
   annotations: {}
 
-# Secret populated by the Secrets Store CSI driver from AWS Secrets Manager.
+# Secret synced by External Secrets Operator from AWS Secrets Manager / SSM.
 envSecretName: appointment-service-secrets
 
 resources:

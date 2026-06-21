@@ -11,8 +11,7 @@ service:
 
 serviceAccount:
   name: report-service
-  # IRSA role ARN (S3 + Bedrock) from Terraform identity module is injected here.
-  annotations: {}
+  create: false
 
 envSecretName: report-service-secrets
 

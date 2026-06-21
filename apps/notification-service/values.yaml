@@ -11,8 +11,7 @@ service:
 
 serviceAccount:
   name: notification-service
-  # IRSA role ARN (SQS consume + SES send) from Terraform is injected here.
-  annotations: {}
+  create: false
 
 envSecretName: notification-service-secrets
 

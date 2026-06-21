@@ -15,6 +15,10 @@ spec:
       values: |
         settings:
           clusterName: lablumen-eks
+          interruptionQueue: lablumen-eks
+        serviceAccount:
+          create: false
+          name: karpenter
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

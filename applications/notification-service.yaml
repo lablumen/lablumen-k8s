@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/rnld101/lablumen.git
+    repoURL: https://github.com/lablumen/lablumen-k8s.git
     targetRevision: main
-    path: k8s/apps/notification-service
+    path: apps/notification-service
     helm: {}
   destination:
     server: https://kubernetes.default.svc
