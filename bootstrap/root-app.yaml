@@ -1,0 +1,34 @@
+# App-of-Apps. Bootstrap ONCE after ArgoCD is installed:
+#   kubectl apply -f bootstrap/root-app.yaml
+# It applies everything ArgoCD needs: the AppProject (wave -1), platform addon Applications (wave 0),
+# the platform-config Application (wave 1), and the service ApplicationSets (wave 2). Each of those
+# then reconciles its own workloads.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lablumen-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # The root stays in `default`: it only manages ArgoCD control-plane objects (AppProject,
+  # Applications, ApplicationSets) in the argocd namespace.
+  project: default
+  source:
+    repoURL: https://github.com/lablumen/lablumen-k8s.git
+    targetRevision: main
+    path: .
+    directory:
+      recurse: true
+      # Dev-only for the initial bring-up: services-dev is included, services-prod is intentionally
+      # left out until you promote real image tags into values-prod.yaml (then add services-prod.yaml).
+      include: "{argocd/projects/*.yaml,argocd/apps/*.yaml,argocd/applicationsets/services-dev.yaml,platform/addons/*.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

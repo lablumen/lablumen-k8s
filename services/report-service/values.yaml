@@ -1,0 +1,17 @@
+# report-service — identity (env-invariant). Needs AWS (S3 + Bedrock) → IRSA.
+name: report-service
+
+image:
+  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/report-service
+
+# prod: consume the Terraform-created IRSA ServiceAccount (create:false). dev overrides to create:true.
+serviceAccount:
+  create: false
+  name: report-service
+
+ingress:
+  enabled: true
+  path: /api/v1/reports
+  pathType: Prefix
+  groupOrder: 10           # specific sub-path — evaluated BEFORE appointment's /api/v1
+  healthcheckPath: /healthz

@@ -1,0 +1,39 @@
+# external-dns: watches Ingresses/Services and creates Route53 records (e.g. api.rnld101.xyz → ALB)
+# dynamically. ServiceAccount is pre-created by Terraform (IRSA: lablumen-external-dns) in kube-system.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: lablumen
+  source:
+    repoURL: https://kubernetes-sigs.github.io/external-dns/
+    chart: external-dns
+    targetRevision: 1.15.0
+    helm:
+      values: |
+        provider:
+          name: aws
+        policy: upsert-only          # never delete records it didn't create
+        registry: txt
+        txtOwnerId: lablumen-eks
+        domainFilters:
+          - rnld101.xyz
+        sources:
+          - ingress
+        serviceAccount:
+          create: false
+          name: external-dns
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

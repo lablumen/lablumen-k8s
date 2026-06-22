@@ -1,0 +1,10 @@
+# dev (namespace lablumen-dev). image.tag is overwritten by the app CI git-write-back per push.
+image:
+  tag: "0.1.0"             # CI (lablumen-app) rewrites this with the git commit SHA
+
+replicaCount: 1
+autoscaling:
+  enabled: false
+
+ingress:
+  host: api-dev.rnld101.xyz

@@ -1,0 +1,12 @@
+apiVersion: v2
+name: microservice
+description: >-
+  Reusable LabLumen application chart. One chart for every stateless FastAPI microservice
+  (appointment / report / notification). Per-service identity and per-environment overrides are
+  supplied via services/<svc>/values{,-dev,-prod}.yaml through ArgoCD multi-source.
+type: application
+version: 1.0.0
+# appVersion is intentionally generic; the deployed image tag (git SHA) comes from values.
+appVersion: "1.0.0"
+maintainers:
+  - name: LabLumen Platform

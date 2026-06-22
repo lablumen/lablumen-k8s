@@ -1,0 +1,3 @@
+# redis — in-cluster ephemeral cache (chart: charts/redis). Image is pinned in the chart (7-alpine);
+# there is no git-SHA write-back for this third-party image.
+name: redis

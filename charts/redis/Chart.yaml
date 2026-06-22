@@ -1,0 +1,8 @@
+apiVersion: v2
+name: redis
+description: >-
+  In-cluster ephemeral Redis for LabLumen (JWKS cache + 5-minute appointment slot-locks). State is
+  rebuildable, so a single replica with no persistence is intentional (external session store).
+type: application
+version: 1.0.0
+appVersion: "7"

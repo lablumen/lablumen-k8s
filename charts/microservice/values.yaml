@@ -1,0 +1,125 @@
+# ---------------------------------------------------------------------------
+# Default values for the reusable `microservice` chart.
+# Per-service identity  -> services/<svc>/values.yaml
+# Per-environment values -> services/<svc>/values-{dev,prod}.yaml
+# Both layered on top of these defaults by the ArgoCD ApplicationSet (multi-source).
+# ---------------------------------------------------------------------------
+
+# Canonical service name. REQUIRED — set in services/<svc>/values.yaml. Drives all resource names
+# (so names stay clean regardless of the ArgoCD release/Application name).
+name: ""
+
+replicaCount: 2
+
+image:
+  repository: ""          # ECR URI — set per service in values.yaml
+  tag: ""                 # git SHA — set per environment. NEVER "latest".
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  # prod: false (Terraform owns the IRSA-annotated SA); dev: true + annotations below.
+  create: false
+  name: ""                # defaults to .name
+  annotations: {}         # dev: { eks.amazonaws.com/role-arn: <dev IRSA ARN> }
+
+service:
+  port: 80
+  targetPort: 8000
+
+# ESO-synced Secret (sensitive creds + non-sensitive SSM config), consumed via envFrom.secretRef.
+externalSecret:
+  enabled: true
+  secretName: ""          # defaults to "<name>-secrets"
+  refreshInterval: 1h
+  secretStore: aws-secrets-manager     # ClusterSecretStore for Secrets Manager
+  parameterStore: aws-parameter-store  # ClusterSecretStore for SSM Parameter Store
+  # Explicit sensitive keys from Secrets Manager.
+  data:
+    - secretKey: DATABASE_URL
+      remoteKey: lablumen/app/database-url
+  # Non-sensitive config discovered from the SSM hierarchy (find).
+  dataFrom:
+    - path: /lablumen/config
+
+resources:
+  requests:
+    cpu: 100m             # rubric floor: CPU requests >= 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+# PodDisruptionBudget — rendered only when effective replicas >= 2.
+pdb:
+  enabled: true
+  maxUnavailable: 1
+
+# Spread replicas across AZs and nodes (no podAntiAffinity — redundant).
+topologySpread:
+  enabled: true
+  maxSkew: 1
+  whenUnsatisfiable: ScheduleAnyway
+
+ingress:
+  enabled: false
+  className: alb
+  host: ""
+  path: /
+  pathType: Prefix
+  groupName: lablumen
+  groupOrder: 100         # lower = higher ALB rule priority; set per service for determinism
+  healthcheckPath: /healthz
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    # HTTPS: terminate at the ALB using the ACM cert auto-discovered for the rule host
+    # (the wildcard *.rnld101.xyz cert covers api/api-dev), and redirect HTTP→HTTPS.
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+
+# Health probes (app endpoints: /healthz liveness, /readyz readiness).
+probes:
+  startup:
+    path: /readyz
+    periodSeconds: 5
+    failureThreshold: 30  # ~150s cold-start budget
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 15
+
+# securityContext per engineering guide §6.2.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Writable /tmp emptyDir (required because rootfs is read-only).
+tmpDir:
+  enabled: true
+
+# NetworkPolicy — bonus, gated OFF by default.
+networkPolicy:
+  enabled: false
+  allowFromNamespaces: []   # e.g. [kube-system] for the ALB controller / ingress
+
+# Extra plain (non-secret) env vars, if ever needed.
+extraEnv: []

@@ -1,0 +1,46 @@
+# prod microservices. Same generator as dev; consumes values-prod.yaml; app names suffixed -prod;
+# namespace lablumen. Promotion is via Git (a human sets image.tag in values-prod.yaml).
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: services-prod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - { name: appointment-service, chart: charts/microservice }
+          - { name: report-service,      chart: charts/microservice }
+          - { name: notification-service, chart: charts/microservice }
+          - { name: redis,               chart: charts/redis }
+  template:
+    metadata:
+      name: '{{.name}}-prod'
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+    spec:
+      project: lablumen
+      sources:
+        - repoURL: https://github.com/lablumen/lablumen-k8s.git
+          targetRevision: main
+          ref: values
+        - repoURL: https://github.com/lablumen/lablumen-k8s.git
+          targetRevision: main
+          path: '{{.chart}}'
+          helm:
+            valueFiles:
+              - $values/services/{{.name}}/values.yaml
+              - $values/services/{{.name}}/values-prod.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: lablumen
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

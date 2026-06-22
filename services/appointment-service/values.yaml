@@ -1,0 +1,19 @@
+# appointment-service — identity (env-invariant). Env overrides in values-{dev,prod}.yaml.
+name: appointment-service
+
+image:
+  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/appointment-service
+
+# appointment-service needs NO AWS API access (RDS + Redis only) → Terraform does not create an IRSA
+# ServiceAccount for it. The chart therefore creates a plain SA (no annotations) in both envs.
+serviceAccount:
+  create: true
+  name: appointment-service
+  annotations: {}
+
+ingress:
+  enabled: true
+  path: /api/v1
+  pathType: Prefix
+  groupOrder: 100          # generic prefix — lower priority than report's /api/v1/reports
+  healthcheckPath: /healthz

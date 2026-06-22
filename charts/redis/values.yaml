@@ -1,0 +1,29 @@
+# Ephemeral in-cluster Redis. No persistence, no PVC (state is rebuildable by design).
+name: redis
+
+image:
+  repository: redis
+  tag: "7-alpine"
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 100m            # rubric floor
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# Runs as the redis user (uid 999) baked into the official image.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 999
+  fsGroup: 999
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL

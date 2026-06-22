@@ -1,0 +1,8 @@
+Redis (ephemeral) deployed in namespace {{ .Release.Namespace }}.
+
+In-cluster address: {{ include "redis.name" . }}.{{ .Release.Namespace }}.svc.cluster.local:6379
+Persistence:        disabled (in-memory cache only — JWKS + slot-locks)
+
+Verify:
+  kubectl -n {{ .Release.Namespace }} get deploy,svc -l app.kubernetes.io/name={{ include "redis.name" . }}
+  kubectl -n {{ .Release.Namespace }} exec deploy/{{ include "redis.name" . }} -- redis-cli ping

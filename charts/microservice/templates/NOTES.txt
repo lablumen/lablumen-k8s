@@ -1,0 +1,15 @@
+{{ include "microservice.name" . }} deployed (release: {{ .Release.Name }}, namespace: {{ .Release.Namespace }}).
+
+Image:        {{ .Values.image.repository }}:{{ .Values.image.tag }}
+ServiceAccount: {{ include "microservice.serviceAccountName" . }} (create={{ .Values.serviceAccount.create }})
+Secret (ESO): {{ include "microservice.secretName" . }}
+Autoscaling:  {{ if .Values.autoscaling.enabled }}HPA {{ .Values.autoscaling.minReplicas }}-{{ .Values.autoscaling.maxReplicas }} @ {{ .Values.autoscaling.targetCPUUtilizationPercentage }}% CPU{{ else }}disabled (replicas={{ .Values.replicaCount }}){{ end }}
+{{- if .Values.ingress.enabled }}
+Ingress:      https://{{ .Values.ingress.host }}{{ .Values.ingress.path }} (ALB group {{ .Values.ingress.groupName }}, order {{ .Values.ingress.groupOrder }})
+{{- else }}
+Ingress:      disabled (internal / worker service)
+{{- end }}
+
+Verify:
+  kubectl -n {{ .Release.Namespace }} get deploy,svc,hpa,pdb,externalsecret -l app.kubernetes.io/name={{ include "microservice.name" . }}
+  kubectl -n {{ .Release.Namespace }} get externalsecret {{ include "microservice.secretName" . }} -o jsonpath='{.status.conditions[0].reason}'

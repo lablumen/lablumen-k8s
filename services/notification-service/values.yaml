@@ -1,0 +1,23 @@
+# notification-service — identity (env-invariant). Background SQS consumer (no public ingress).
+# Needs AWS (SQS + SES) → IRSA.
+name: notification-service
+
+image:
+  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/notification-service
+
+serviceAccount:
+  create: false
+  name: notification-service
+
+# No ingress — consumes SQS, not HTTP-fronted.
+ingress:
+  enabled: false
+
+# CPU request bumped from the legacy 50m to meet the rubric floor of >= 100m.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

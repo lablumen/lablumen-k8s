@@ -1,0 +1,25 @@
+# Cluster configuration (ClusterSecretStores). Wave 1: after the ESO controller/CRDs (wave 0),
+# before app ExternalSecrets (wave 2).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: lablumen
+  source:
+    repoURL: https://github.com/lablumen/lablumen-k8s.git
+    targetRevision: main
+    path: platform/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

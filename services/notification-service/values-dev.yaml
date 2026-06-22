@@ -1,0 +1,12 @@
+# dev (namespace lablumen-dev).
+image:
+  tag: "0.1.0"             # CI (lablumen-app) rewrites this with the git commit SHA
+
+replicaCount: 1
+autoscaling:
+  enabled: false
+
+# Terraform creates the IRSA-annotated notification-service SA in lablumen-dev too (role trusts both
+# lablumen and lablumen-dev), so the chart must NOT create one.
+serviceAccount:
+  create: false
