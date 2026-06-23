@@ -22,7 +22,7 @@ argocd/
 charts/
   microservice/                ONE reusable chart for all stateless services
   redis/                       ephemeral in-cluster Redis (no persistence)
-environments/_global.yaml      shared values layered under every service — holds global.imageRegistry
+global-values.yaml             repo-wide shared values layered under every service — holds global.imageRegistry
 services/<svc>/                value overlays only: values.yaml + values-dev.yaml + values-prod.yaml
 platform/
   addons/                      ArgoCD Applications for argocd, metrics-server, ESO, ALB ctrl, karpenter (wave 0)
@@ -44,13 +44,13 @@ never by mutating the cluster directly.
 Each generated `Application` combines two sources of the same repo:
 1. a `ref: values` source (provides the value files), and
 2. the shared chart (`charts/microservice` or `charts/redis`) with
-   `valueFiles: [$values/environments/_global.yaml, $values/services/<svc>/values.yaml, $values/services/<svc>/values-<env>.yaml]`.
+   `valueFiles: [$values/global-values.yaml, $values/services/<svc>/values.yaml, $values/services/<svc>/values-<env>.yaml]`.
 
-Value precedence (low → high): `charts/microservice/values.yaml` → `environments/_global.yaml`
+Value precedence (low → high): `charts/microservice/values.yaml` → `global-values.yaml`
 (registry host) → `services/<svc>/values.yaml` → `services/<svc>/values-<env>.yaml`.
 
 The image reference is assembled as `<global.imageRegistry>/<image.repository>:<image.tag>`, so the
-account-specific registry host lives in **one** place (`environments/_global.yaml`) — set it once from
+account-specific registry host lives in **one** place (`global-values.yaml`) — set it once from
 `terraform output -raw image_registry`. Per-service files carry only the repo path
 (`lablumen/<svc>`).
 
@@ -85,14 +85,14 @@ No cluster needed:
 # Render + schema-validate a service for an environment
 helm template charts/microservice \
   -f charts/microservice/values.yaml \
-  -f environments/_global.yaml \
+  -f global-values.yaml \
   -f services/appointment-service/values.yaml \
   -f services/appointment-service/values-prod.yaml \
   | kubeconform -strict -ignore-missing-schemas
 
-# Lint (pass _global for the registry + a service's values — the chart requires .Values.name)
+# Lint (pass global-values for the registry + a service's values — the chart requires .Values.name)
 helm lint charts/microservice \
-  -f environments/_global.yaml \
+  -f global-values.yaml \
   -f services/appointment-service/values.yaml -f services/appointment-service/values-dev.yaml
 helm lint charts/redis -f services/redis/values.yaml
 

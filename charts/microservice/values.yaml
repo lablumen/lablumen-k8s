@@ -11,11 +11,11 @@ name: ""
 
 replicaCount: 2
 
-# Account-portable registry. The host is set ONCE in environments/_global.yaml (layered under every
-# service by the ApplicationSet), so no account ID lives in per-service files. Full image reference is
+# Account-portable registry. The host is set ONCE in global-values.yaml (layered under every service by
+# the ApplicationSet), so no account ID lives in per-service files. Full image reference is
 # <global.imageRegistry>/<image.repository>:<image.tag>.
 global:
-  imageRegistry: ""       # e.g. <account_id>.dkr.ecr.<region>.amazonaws.com — set in environments/_global.yaml
+  imageRegistry: ""       # e.g. <account_id>.dkr.ecr.<region>.amazonaws.com — set in global-values.yaml
 
 image:
   repository: ""          # repo path only, e.g. lablumen/appointment-service — set per service in values.yaml

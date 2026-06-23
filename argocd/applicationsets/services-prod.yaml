@@ -33,7 +33,7 @@ spec:
           path: '{{.chart}}'
           helm:
             valueFiles:
-              - $values/environments/_global.yaml
+              - $values/global-values.yaml
               - $values/services/{{.name}}/values.yaml
               - $values/services/{{.name}}/values-prod.yaml
       destination:

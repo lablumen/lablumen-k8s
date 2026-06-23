@@ -2,7 +2,7 @@
 name: appointment-service
 
 image:
-  repository: lablumen/appointment-service   # registry host comes from environments/_global.yaml
+  repository: lablumen/appointment-service   # registry host comes from global-values.yaml
 
 # appointment-service needs NO AWS API access (RDS + Redis only) → Terraform does not create an IRSA
 # ServiceAccount for it. The chart therefore creates a plain SA (no annotations) in both envs.

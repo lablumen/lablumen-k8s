@@ -1,8 +1,0 @@
-# Environment-global values layered UNDER every microservice by the services ApplicationSets
-# (via the $values multi-source ref). This is the single place the container registry is defined.
-#
-# The registry host is the ONLY account-specific value in this repo. On a new account, set it once
-# here from the Terraform output:  terraform output -raw image_registry
-# Format: <account_id>.dkr.ecr.<region>.amazonaws.com
-global:
-  imageRegistry: "261523981519.dkr.ecr.us-east-1.amazonaws.com"
