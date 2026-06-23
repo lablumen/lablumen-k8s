@@ -1,15 +1,12 @@
 # dev (namespace lablumen-dev).
 image:
-  tag: "0.1.0"             # CI (lablumen-app) rewrites this with the git commit SHA
-
+  tag: "d788198" # CI (lablumen-app) rewrites this with the git commit SHA
 replicaCount: 1
 autoscaling:
   enabled: false
-
 # Terraform creates the IRSA-annotated report-service SA in lablumen-dev too, so the chart must NOT
 # create one (the role trusts both lablumen and lablumen-dev subjects).
 serviceAccount:
   create: false
-
 ingress:
   host: api-dev.rnld101.xyz
