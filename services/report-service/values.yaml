@@ -4,6 +4,17 @@ name: report-service
 image:
   repository: lablumen/report-service   # registry host comes from global-values.yaml
 
+# Config wiring: AWS config from SSM mapped to the app's exact env-var names.
+externalSecret:
+  ssmData:
+    - { secretKey: AWS_REGION, remoteKey: /lablumen/config/region }
+    - { secretKey: COGNITO_USER_POOL_ID, remoteKey: /lablumen/config/cognito-user-pool-id }
+    - { secretKey: COGNITO_APP_CLIENT_ID, remoteKey: /lablumen/config/cognito-app-client-id }
+    - { secretKey: REPORTS_S3_BUCKET, remoteKey: /lablumen/config/reports-bucket }
+    - { secretKey: BEDROCK_EMBED_MODEL_ID, remoteKey: /lablumen/config/bedrock-embed-model }
+    - { secretKey: BEDROCK_TEXT_MODEL_ID, remoteKey: /lablumen/config/bedrock-text-model }
+    - { secretKey: PRESIGNED_URL_TTL_SECONDS, remoteKey: /lablumen/config/presigned-url-ttl }
+
 # prod: consume the Terraform-created IRSA ServiceAccount (create:false). dev overrides to create:true.
 serviceAccount:
   create: false

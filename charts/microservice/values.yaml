@@ -39,13 +39,13 @@ externalSecret:
   refreshInterval: 1h
   secretStore: aws-secrets-manager     # ClusterSecretStore for Secrets Manager
   parameterStore: aws-parameter-store  # ClusterSecretStore for SSM Parameter Store
-  # Explicit sensitive keys from Secrets Manager.
+  # Sensitive keys from Secrets Manager.
   data:
     - secretKey: DATABASE_URL
       remoteKey: lablumen/app/database-url
-  # Non-sensitive config discovered from the SSM hierarchy (find).
-  dataFrom:
-    - path: /lablumen/config
+  # Non-sensitive config from SSM Parameter Store, mapped to exact app env-var names. Set per service
+  # in services/<svc>/values.yaml (each entry: secretKey = env var, remoteKey = full SSM param path).
+  ssmData: []
 
 resources:
   requests:

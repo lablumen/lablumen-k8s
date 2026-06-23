@@ -4,6 +4,17 @@ name: appointment-service
 image:
   repository: lablumen/appointment-service   # registry host comes from global-values.yaml
 
+# Config wiring: cluster-internal Redis + AWS config from SSM mapped to the app's exact env-var names.
+extraEnv:
+  - name: REDIS_URL
+    value: redis://redis:6379/0
+externalSecret:
+  ssmData:
+    - { secretKey: AWS_REGION, remoteKey: /lablumen/config/region }
+    - { secretKey: COGNITO_USER_POOL_ID, remoteKey: /lablumen/config/cognito-user-pool-id }
+    - { secretKey: COGNITO_APP_CLIENT_ID, remoteKey: /lablumen/config/cognito-app-client-id }
+    - { secretKey: NOTIFICATIONS_QUEUE_URL, remoteKey: /lablumen/config/sqs-url }
+
 # appointment-service needs NO AWS API access (RDS + Redis only) → Terraform does not create an IRSA
 # ServiceAccount for it. The chart therefore creates a plain SA (no annotations) in both envs.
 serviceAccount:

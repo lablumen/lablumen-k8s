@@ -5,6 +5,13 @@ name: notification-service
 image:
   repository: lablumen/notification-service   # registry host comes from global-values.yaml
 
+# Config wiring: AWS config from SSM mapped to the app's exact env-var names.
+externalSecret:
+  ssmData:
+    - { secretKey: AWS_REGION, remoteKey: /lablumen/config/region }
+    - { secretKey: NOTIFICATIONS_QUEUE_URL, remoteKey: /lablumen/config/sqs-url }
+    - { secretKey: SES_SENDER_EMAIL, remoteKey: /lablumen/config/ses-sender }
+
 serviceAccount:
   create: false
   name: notification-service
