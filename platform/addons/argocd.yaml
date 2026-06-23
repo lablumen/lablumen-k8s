@@ -18,6 +18,25 @@ spec:
         configs:
           params:
             server.insecure: true
+        server:
+          # Expose the UI at argocd.rnld101.xyz via the shared ALB (TLS at the ALB using the wildcard
+          # ACM cert; server runs --insecure so the ALB forwards plain HTTP). external-dns creates the
+          # Route53 record. UI-only (gRPC/CLI would need extra annotations).
+          ingress:
+            enabled: true
+            ingressClassName: alb
+            hostname: argocd.rnld101.xyz
+            path: /
+            pathType: Prefix
+            annotations:
+              alb.ingress.kubernetes.io/scheme: internet-facing
+              alb.ingress.kubernetes.io/target-type: ip
+              alb.ingress.kubernetes.io/group.name: lablumen
+              alb.ingress.kubernetes.io/group.order: "200"
+              alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+              alb.ingress.kubernetes.io/ssl-redirect: "443"
+              alb.ingress.kubernetes.io/backend-protocol: HTTP
+              alb.ingress.kubernetes.io/healthcheck-path: /healthz
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

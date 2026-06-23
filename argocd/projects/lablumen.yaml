@@ -22,6 +22,7 @@ spec:
     - public.ecr.aws/karpenter
     - https://kubernetes-sigs.github.io/metrics-server/
     - https://kubernetes-sigs.github.io/external-dns/
+    - https://prometheus-community.github.io/helm-charts
 
   # Only these namespaces on the in-cluster server may be targeted.
   destinations:
@@ -31,6 +32,7 @@ spec:
     - { server: https://kubernetes.default.svc, namespace: external-secrets }
     - { server: https://kubernetes.default.svc, namespace: lablumen }
     - { server: https://kubernetes.default.svc, namespace: lablumen-dev }
+    - { server: https://kubernetes.default.svc, namespace: monitoring }      # kube-prometheus-stack
 
   # Cluster-scoped resources the addons legitimately need (curated, not "*/*"). Tighten further if a
   # given addon version stops needing one of these.

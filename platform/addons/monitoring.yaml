@@ -1,0 +1,86 @@
+# Observability: kube-prometheus-stack (Prometheus + Grafana + Alertmanager + node-exporter +
+# kube-state-metrics). Wave 2 — after the monitoring-secret app (wave 1) creates the grafana-admin
+# Secret. Grafana is exposed at grafana.rnld101.xyz (shared ALB, auth via the ESO-synced admin secret);
+# Prometheus + Alertmanager stay internal. Storage is ephemeral (emptyDir) with 2-day retention.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: lablumen
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 87.0.1
+    helm:
+      values: |
+        grafana:
+          admin:
+            existingSecret: grafana-admin
+            userKey: admin-user
+            passwordKey: admin-password
+          ingress:
+            enabled: true
+            ingressClassName: alb
+            hosts:
+              - grafana.rnld101.xyz
+            annotations:
+              alb.ingress.kubernetes.io/scheme: internet-facing
+              alb.ingress.kubernetes.io/target-type: ip
+              alb.ingress.kubernetes.io/group.name: lablumen
+              alb.ingress.kubernetes.io/group.order: "210"
+              alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+              alb.ingress.kubernetes.io/ssl-redirect: "443"
+              alb.ingress.kubernetes.io/healthcheck-path: /api/health
+          grafana.ini:
+            server:
+              root_url: https://grafana.rnld101.xyz
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+        prometheus:
+          prometheusSpec:
+            retention: 2d
+            # ephemeral (no storageSpec -> emptyDir)
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+        alertmanager:
+          alertmanagerSpec:
+            # ephemeral (no storage -> emptyDir)
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+        prometheusOperator:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+        nodeExporter:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true     # kube-prometheus-stack CRDs are large
