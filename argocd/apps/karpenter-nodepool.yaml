@@ -1,0 +1,22 @@
+# Applies the Karpenter NodePool + EC2NodeClass (raw CRs in platform/karpenter) at wave 1 — after the
+# CRDs (wave -1) and the controller/webhook (wave 0) exist, so the CRs validate.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter-nodepool
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: lablumen
+  source:
+    repoURL: https://github.com/lablumen/lablumen-k8s.git
+    targetRevision: main
+    path: platform/karpenter
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
