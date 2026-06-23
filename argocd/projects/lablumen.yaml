@@ -21,11 +21,13 @@ spec:
     - https://aws.github.io/eks-charts
     - public.ecr.aws/karpenter
     - https://kubernetes-sigs.github.io/metrics-server/
+    - https://kubernetes-sigs.github.io/external-dns/
 
   # Only these namespaces on the in-cluster server may be targeted.
   destinations:
     - { server: https://kubernetes.default.svc, namespace: argocd }
     - { server: https://kubernetes.default.svc, namespace: kube-system }
+    - { server: https://kubernetes.default.svc, namespace: kube-node-lease }   # karpenter lease Role/RoleBinding
     - { server: https://kubernetes.default.svc, namespace: external-secrets }
     - { server: https://kubernetes.default.svc, namespace: lablumen }
     - { server: https://kubernetes.default.svc, namespace: lablumen-dev }
