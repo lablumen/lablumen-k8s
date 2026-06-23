@@ -42,7 +42,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ include "microservice.name" . }}
-          image: "{{ required "image.repository is required (set in services/<svc>/values.yaml)" .Values.image.repository }}:{{ required "image.tag is required (set git SHA in services/<svc>/values-<env>.yaml)" .Values.image.tag }}"
+          image: "{{ required "global.imageRegistry is required (set once in environments/_global.yaml)" .Values.global.imageRegistry }}/{{ required "image.repository is required (set in services/<svc>/values.yaml)" .Values.image.repository }}:{{ required "image.tag is required (set git SHA in services/<svc>/values-<env>.yaml)" .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http

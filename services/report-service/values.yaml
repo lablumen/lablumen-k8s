@@ -2,7 +2,7 @@
 name: report-service
 
 image:
-  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/report-service
+  repository: lablumen/report-service   # registry host comes from environments/_global.yaml
 
 # prod: consume the Terraform-created IRSA ServiceAccount (create:false). dev overrides to create:true.
 serviceAccount:

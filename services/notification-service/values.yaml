@@ -3,7 +3,7 @@
 name: notification-service
 
 image:
-  repository: 130290476321.dkr.ecr.us-east-1.amazonaws.com/lablumen/notification-service
+  repository: lablumen/notification-service   # registry host comes from environments/_global.yaml
 
 serviceAccount:
   create: false
