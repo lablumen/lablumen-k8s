@@ -20,9 +20,10 @@ spec:
     path: .
     directory:
       recurse: true
-      # Dev-only for the initial bring-up: services-dev is included, services-prod is intentionally
-      # left out until you promote real image tags into values-prod.yaml (then add services-prod.yaml).
-      include: "{argocd/projects/*.yaml,argocd/apps/*.yaml,argocd/applicationsets/services-dev.yaml,platform/addons/*.yaml}"
+      # Both dev + prod ApplicationSets. PROD services stay pending (ImagePullBackOff on the placeholder
+      # tag) until their first GitHub Release promotes a real semver into values-prod.yaml — that's the
+      # intended "not yet released to prod" state.
+      include: "{argocd/projects/*.yaml,argocd/apps/*.yaml,argocd/applicationsets/*.yaml,platform/addons/*.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
