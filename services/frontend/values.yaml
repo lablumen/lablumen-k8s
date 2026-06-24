@@ -1,0 +1,56 @@
+# Base values for the frontend service — shared across all environments.
+# Environment-specific overrides live in values-dev.yaml / values-prod.yaml.
+# This file is ArgoCD multi-source source #1; env values are source #2.
+
+name: frontend
+
+image:
+  # Registry host is in global-values.yaml; only the repo path goes here.
+  # Terraform output: module.ecr.repository_urls["lablumen/frontend"]
+  repository: lablumen/frontend
+  tag: ""
+
+replicaCount: 1
+
+service:
+  port: 80
+  targetPort: 80        # nginx listens on 80
+
+serviceAccount:
+  # Frontend has no AWS API calls — create a plain SA with no IRSA annotation.
+  create: true
+  name: ""
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: alb
+  groupName: lablumen   # shared ALB IngressGroup with backend services
+  groupOrder: "100"     # catch-all / lowest priority — evaluated after specific API paths
+  path: /
+  pathType: Prefix
+  healthcheckPath: /
+  host: ""              # set per environment below
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    # certificate-arn: set per environment (ACM cert ARN from terraform output)
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: false
+  maxUnavailable: 1
+
+networkPolicy:
+  enabled: false
+  allowFromNamespaces: []
+
+# Frontend is a static nginx container — it has no database or SSM config to sync.
+externalSecret:
+  enabled: false

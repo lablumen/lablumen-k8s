@@ -18,6 +18,7 @@ spec:
           - { name: report-service,      chart: charts/microservice }
           - { name: notification-service, chart: charts/microservice }
           - { name: redis,               chart: charts/redis }
+          - { name: frontend,            chart: charts/microservice }
   template:
     metadata:
       name: '{{.name}}-dev'
