@@ -5,3 +5,9 @@ image:
   tag: "d85eefe"
 ingress:
   host: app-dev.rnld101.xyz
+
+extraEnv:
+  - name: VITE_COGNITO_USER_POOL_ID
+    value: "us-east-1_KNlhFCKFn"
+  - name: VITE_COGNITO_APP_CLIENT_ID
+    value: "feo882dvf7det6j57i60p70ku"
