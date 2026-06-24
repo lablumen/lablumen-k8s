@@ -81,13 +81,20 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-          {{- if .Values.tmpDir.enabled }}
           volumeMounts:
+            {{- if .Values.tmpDir.enabled }}
             - name: tmp
               mountPath: /tmp
-          {{- end }}
-      {{- if .Values.tmpDir.enabled }}
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
       volumes:
+        {{- if .Values.tmpDir.enabled }}
         - name: tmp
           emptyDir: {}
-      {{- end }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+

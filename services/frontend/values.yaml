@@ -54,3 +54,16 @@ networkPolicy:
 # Frontend is a static nginx container — it has no database or SSM config to sync.
 externalSecret:
   enabled: false
+
+# Writable directories for nginx cache and run files (required for read-only rootfs)
+extraVolumeMounts:
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: nginx-run
+    mountPath: /var/run
+
+extraVolumes:
+  - name: nginx-cache
+    emptyDir: {}
+  - name: nginx-run
+    emptyDir: {}
