@@ -2,7 +2,6 @@
 # image.tag is bumped automatically by service-build-push.yml on every push to main.
 
 image:
-  tag: "0.1.0"
-
+  tag: "d85eefe"
 ingress:
   host: app-dev.rnld101.xyz
