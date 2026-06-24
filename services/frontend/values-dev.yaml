@@ -2,10 +2,9 @@
 # image.tag is bumped automatically by service-build-push.yml on every push to main.
 
 image:
-  tag: "d85eefe"
+  tag: "8c2a3e3"
 ingress:
   host: app-dev.rnld101.xyz
-
 extraEnv:
   - name: VITE_COGNITO_USER_POOL_ID
     value: "us-east-1_KNlhFCKFn"
