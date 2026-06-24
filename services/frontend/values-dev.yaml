@@ -2,7 +2,7 @@
 # image.tag is bumped automatically by service-build-push.yml on every push to main.
 
 image:
-  tag: "8c2a3e3"
+  tag: "ec905e5"
 ingress:
   host: app-dev.rnld101.xyz
 extraEnv:
