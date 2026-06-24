@@ -107,3 +107,4 @@ argocd appset generate argocd/applicationsets/services-prod.yaml
 - ESO ServiceAccount must be named `lablumen-eso` (SA + IRSA trust subject).
 
 See `../extras/CLAUDE.md` for the full architectural contract and decision log.
+#

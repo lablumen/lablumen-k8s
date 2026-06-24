@@ -51,9 +51,14 @@ networkPolicy:
   enabled: false
   allowFromNamespaces: []
 
-# Frontend is a static nginx container — it has no database or SSM config to sync.
+# Cognito config comes from SSM via ESO — same pattern as backend services.
+# No Secrets Manager key (frontend has no DB); only SSM params are needed.
 externalSecret:
-  enabled: false
+  enabled: true
+  data: []
+  ssmData:
+    - { secretKey: VITE_COGNITO_USER_POOL_ID,  remoteKey: /lablumen/config/cognito-user-pool-id }
+    - { secretKey: VITE_COGNITO_APP_CLIENT_ID, remoteKey: /lablumen/config/cognito-app-client-id }
 
 # Writable directories for nginx cache and run files (required for read-only rootfs)
 extraVolumeMounts:

@@ -1,15 +1,13 @@
 # EC2NodeClass — how Karpenter builds nodes (AMI, IAM role, subnets, security groups).
-# Subnets + SG are discovered by the `karpenter.sh/discovery=lablumen-eks` tags that Terraform's EKS
-# Karpenter submodule applied. `role` is the Terraform-created Karpenter node role — Karpenter manages
-# its instance profile. NOTE: the role name carries a Terraform-generated suffix, so it is per-account
-# (like global-values.yaml's registry); update it after a fresh `terraform apply` if it changes
-# (`aws iam list-roles --query "Roles[?starts_with(RoleName,'Karpenter-lablumen-eks-')].RoleName"`).
+# Subnets + SG are discovered by the `karpenter.sh/discovery=lablumen-eks` tags set by Terraform.
+# The node role name is deterministic: Terraform sets node_iam_role_name = "KarpenterNodeRole-<cluster>"
+# so this file never needs updating after a re-apply.
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  role: "Karpenter-lablumen-eks-2026062413531375300000001f"
+  role: "KarpenterNodeRole-lablumen-eks"
   amiSelectorTerms:
     - alias: al2023@latest          # AL2023 AMI matching the cluster's Kubernetes version
   subnetSelectorTerms:
