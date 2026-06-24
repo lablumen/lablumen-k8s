@@ -9,7 +9,7 @@ kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  role: "Karpenter-lablumen-eks-20260623133120608200000028"
+  role: "Karpenter-lablumen-eks-2026062413531375300000001f"
   amiSelectorTerms:
     - alias: al2023@latest          # AL2023 AMI matching the cluster's Kubernetes version
   subnetSelectorTerms:
