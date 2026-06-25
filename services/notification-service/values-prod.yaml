@@ -1,6 +1,6 @@
 # prod (namespace lablumen). Worker scales by replica count (competing SQS consumers), not CPU HPA.
 image:
-  tag: "v1.0.0" # set to the released git SHA / tag on promotion
+  tag: "2.0.0" # set to the released git SHA / tag on promotion
 replicaCount: 2
 autoscaling:
   enabled: false # HPA off for the worker; 2 replicas give availability + parallel consumption
