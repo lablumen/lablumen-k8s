@@ -2,7 +2,7 @@
 # image.tag is bumped automatically by service-release.yml on GitHub Release (semver).
 
 image:
-  tag: "v1.0.0"
+  tag: "2.0.0"
 replicaCount: 2
 ingress:
   host: app.rnld101.xyz
