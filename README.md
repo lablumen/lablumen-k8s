@@ -108,3 +108,4 @@ argocd appset generate argocd/applicationsets/services-prod.yaml
 
 See `../extras/CLAUDE.md` for the full architectural contract and decision log.
 #
+#
