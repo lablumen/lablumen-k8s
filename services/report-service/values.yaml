@@ -14,6 +14,7 @@ externalSecret:
     - { secretKey: BEDROCK_EMBED_MODEL_ID, remoteKey: /lablumen/config/bedrock-embed-model }
     - { secretKey: BEDROCK_TEXT_MODEL_ID, remoteKey: /lablumen/config/bedrock-text-model }
     - { secretKey: PRESIGNED_URL_TTL_SECONDS, remoteKey: /lablumen/config/presigned-url-ttl }
+    - { secretKey: BEDROCK_CROSS_ACCOUNT_ROLE_ARN, remoteKey: /lablumen/config/bedrock-cross-account-role-arn }
 
 # prod: consume the Terraform-created IRSA ServiceAccount (create:false). dev overrides to create:true.
 serviceAccount:
