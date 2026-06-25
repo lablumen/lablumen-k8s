@@ -1,13 +1,11 @@
 # prod (namespace lablumen). image.tag is set by a human during a tagged release (never automated).
 image:
-  tag: "0.1.0"             # set to the released git SHA / tag on promotion
-
+  tag: "v1.0.0" # set to the released git SHA / tag on promotion
 replicaCount: 2
 autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 6
   targetCPUUtilizationPercentage: 70
-
 ingress:
   host: api.rnld101.xyz

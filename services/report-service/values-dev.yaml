@@ -1,6 +1,6 @@
 # dev (namespace lablumen-dev).
 image:
-  tag: "97c459a" # CI (lablumen-app) rewrites this with the git commit SHA
+  tag: "e2db10a" # CI (lablumen-app) rewrites this with the git commit SHA
 replicaCount: 1
 autoscaling:
   enabled: false
