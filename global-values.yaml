@@ -6,4 +6,4 @@
 # from the Terraform output:  terraform output -raw image_registry
 # Format: <account_id>.dkr.ecr.<region>.amazonaws.com
 global:
-  imageRegistry: "261523981519.dkr.ecr.us-east-1.amazonaws.com"
+  imageRegistry: "025392543842.dkr.ecr.us-east-1.amazonaws.com"
