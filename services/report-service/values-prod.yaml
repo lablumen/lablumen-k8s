@@ -1,6 +1,6 @@
 # prod (namespace lablumen). Uses the Terraform-created IRSA SA (serviceAccount.create:false).
 image:
-  tag: "v1.0.0" # set to the released git SHA / tag on promotion
+  tag: "2.0.0" # set to the released git SHA / tag on promotion
 replicaCount: 2
 autoscaling:
   enabled: true
