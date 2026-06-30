@@ -1,111 +1,142 @@
 # lablumen-k8s
 
-GitOps repository for the **LabLumen** platform on AWS EKS. It holds the Helm charts, per-environment
-value overlays, ArgoCD definitions, and platform add-ons that deploy the LabLumen microservices onto a
-Terraform-provisioned `lablumen-eks` cluster.
+GitOps repository for the LabLumen platform. This is the single source of truth for what runs in the `lablumen-eks` Kubernetes cluster. ArgoCD watches this repository and automatically reconciles the cluster to match its contents.
 
-This repo is **environment-blind and declarative**: it describes *how* to deploy; the per-environment
-inputs (image SHA, replicas, hostnames) live in value overlays and are reconciled by ArgoCD.
+No application code or business logic lives here — only deployment configuration.
 
 ---
 
-## Repository layout
+## How It Works
+
+Deployments are driven by ArgoCD using the **App-of-Apps** pattern:
+
+1. A single `kubectl apply -f bootstrap/root-app.yaml` bootstraps ArgoCD.
+2. The root Application watches this repository and creates all other Applications in a controlled order using sync waves:
+   - **Wave 0** — Platform add-ons: ArgoCD, Karpenter, External Secrets Operator, AWS Load Balancer Controller, ExternalDNS, Metrics Server, Prometheus/Grafana.
+   - **Wave 1** — Cluster-wide config: External Secrets ClusterSecretStores.
+   - **Wave 2** — Application services: all microservices and Redis in both dev and prod namespaces.
+
+Changes to this repository are the only way to change what runs in the cluster. There is no manual `kubectl apply` in day-to-day operations.
+
+---
+
+## Repository Layout
 
 ```
-bootstrap/root-app.yaml        App-of-Apps — apply once to bootstrap everything
+bootstrap/
+  root-app.yaml                    The single manifest that bootstraps the entire cluster
+
 argocd/
-  projects/lablumen.yaml       AppProject (guardrails: repos, namespaces, resource kinds)
-  apps/platform-config.yaml    Application → ClusterSecretStores (sync-wave 1)
+  projects/
+    lablumen.yaml                  AppProject — allowed repos, namespaces, and resource types
+  apps/
+    platform-config.yaml           Application for the ESO ClusterSecretStore resources
+    karpenter-nodepool.yaml        Application for Karpenter EC2NodeClass and NodePool
+    monitoring-secret.yaml         ExternalSecret syncing Grafana admin credentials
   applicationsets/
-    services-dev.yaml          dev microservices  → namespace lablumen-dev (sync-wave 2)
-    services-prod.yaml         prod microservices → namespace lablumen      (sync-wave 2)
+    services-dev.yaml              Generates Applications for all services in lablumen-dev
+    services-prod.yaml             Generates Applications for all services in lablumen
+
 charts/
-  microservice/                ONE reusable chart for all stateless services
-  redis/                       ephemeral in-cluster Redis (no persistence)
-global-values.yaml             repo-wide shared values layered under every service — holds global.imageRegistry
-services/<svc>/                value overlays only: values.yaml + values-dev.yaml + values-prod.yaml
+  microservice/                    Shared Helm chart used by all stateless services
+  redis/                           Ephemeral in-cluster Redis (no persistence)
+
+global-values.yaml                 Shared values applied to every service (image registry host, etc.)
+
+services/
+  appointment-service/
+    values.yaml                    Service identity, ingress path, SSM config mappings
+    values-dev.yaml                Dev image tag — updated by CI on every merge to main
+    values-prod.yaml               Prod image tag — updated by CI on every GitHub Release
+  report-service/                  (same structure)
+  notification-service/            (same structure)
+  frontend/                        (same structure)
+  redis/                           (same structure)
+
 platform/
-  addons/                      ArgoCD Applications for argocd, metrics-server, ESO, ALB ctrl, karpenter (wave 0)
-  config/cluster-secret-store.yaml   ESO ClusterSecretStores (Secrets Manager + SSM)
+  addons/                          ArgoCD Applications for each platform add-on (Helm chart references)
+  config/
+    cluster-secret-store.yaml      ESO ClusterSecretStores for Secrets Manager and SSM
+  karpenter/
+    ec2nodeclass.yaml              EC2 image, subnet tags, and security group selectors for new nodes
+    nodepool.yaml                  Karpenter NodePool — instance types, vCPU limits, consolidation policy
+  monitoring/
+    grafana-admin.externalsecret.yaml
+
+scripts/
+  bootstrap-argocd.sh              Installs ArgoCD via Helm and applies the root app (run once)
 ```
+
+---
 
 ## Environments
 
-| Env  | Namespace      | ApplicationSet  | Image tag source                              |
-|------|----------------|-----------------|-----------------------------------------------|
-| dev  | `lablumen-dev` | `services-dev`  | CI git-write-back of git SHA into `values-dev.yaml` |
-| prod | `lablumen`     | `services-prod` | human sets the released SHA in `values-prod.yaml`   |
+| Environment | Namespace | Image Tag Source |
+|---|---|---|
+| Dev | `lablumen-dev` | 7-character git SHA, written by CI on every merge to `main` |
+| Production | `lablumen` | Semver tag (e.g., `v1.2.0`), written by CI on every GitHub Release |
 
-Both run on the single `lablumen-eks` cluster. Promotion is via Git (edit the prod value file),
-never by mutating the cluster directly.
+Both environments run on the same `lablumen-eks` cluster. Promotion is always via Git — never by mutating the cluster directly.
 
-## How a service is assembled (ArgoCD multi-source)
+---
 
-Each generated `Application` combines two sources of the same repo:
-1. a `ref: values` source (provides the value files), and
-2. the shared chart (`charts/microservice` or `charts/redis`) with
-   `valueFiles: [$values/global-values.yaml, $values/services/<svc>/values.yaml, $values/services/<svc>/values-<env>.yaml]`.
+## The Microservice Helm Chart
 
-Value precedence (low → high): `charts/microservice/values.yaml` → `global-values.yaml`
-(registry host) → `services/<svc>/values.yaml` → `services/<svc>/values-<env>.yaml`.
+All stateless services share a single reusable chart (`charts/microservice`). It generates the full set of Kubernetes objects for each service:
 
-The image reference is assembled as `<global.imageRegistry>/<image.repository>:<image.tag>`, so the
-account-specific registry host lives in **one** place (`global-values.yaml`) — set it once from
-`terraform output -raw image_registry`. Per-service files carry only the repo path
-(`lablumen/<svc>`).
+| Object | Purpose |
+|---|---|
+| `Deployment` | Pod spec with security context, liveness/readiness probes, resource limits |
+| `Service` | Stable ClusterIP DNS name for inter-service communication |
+| `Ingress` | ALB path routing rules (managed by AWS Load Balancer Controller) |
+| `HPA` | Horizontal Pod Autoscaler — scales replicas based on CPU/memory |
+| `PDB` | PodDisruptionBudget — ensures minimum replicas during node maintenance |
+| `ExternalSecret` | Pulls config from SSM Parameter Store and Secrets Manager into a Kubernetes Secret |
+| `ServiceAccount` | With optional IRSA annotations for pod-level AWS access |
+| `NetworkPolicy` | Restricts allowed traffic at the pod level |
 
-## Secrets & config (External Secrets Operator)
+Per-service `values.yaml` files only define what is specific to that service: image repository, ingress path, SSM key mappings, and replica counts.
 
-No secrets or config values live in Git. ESO (SA `lablumen-eso`, IRSA) syncs from AWS into a single
-Kubernetes **Secret** per service (consumed via `envFrom.secretRef`):
-- sensitive `DATABASE_URL` ← Secrets Manager `lablumen/app/database-url`
-- non-sensitive config ← SSM Parameter Store hierarchy `/lablumen/config/*` (`dataFrom`)
+---
 
-> Note: per a deliberate decision, non-sensitive config is delivered via a Secret rather than a
-> ConfigMap (avoids ESO's alpha "generic targets" feature). See `extras/CLAUDE.md`.
+## Secrets and Configuration
+
+No secrets or config values are committed to this repository. Everything is sourced from AWS at runtime by External Secrets Operator:
+
+- **Sensitive values** (e.g., `DATABASE_URL`) are read from AWS Secrets Manager.
+- **Non-sensitive config** (e.g., Cognito pool ID, SQS URL, S3 bucket name) is read from SSM Parameter Store under `/lablumen/config/*`.
+
+Each pod consumes its config via `envFrom.secretRef` — the application itself has no AWS SDK dependency for configuration.
+
+---
 
 ## Bootstrap
 
-Prerequisites: Terraform applied (cluster, namespaces `lablumen` + `external-secrets`, IRSA
-ServiceAccounts incl. `lablumen-eso`, empty Secrets Manager shells populated by an operator), and
-ArgoCD installed (`helm install argo/argo-cd -n argocd --create-namespace`).
+Prerequisites: Terraform applied (EKS cluster exists, namespaces and IRSA ServiceAccounts created, Secrets Manager shells populated with real values by an operator).
 
 ```bash
-kubectl apply -f bootstrap/root-app.yaml
+bash scripts/bootstrap-argocd.sh
 ```
 
-Sync order is enforced by sync-waves: AppProject (-1) → addons incl. metrics-server + ESO (0) →
-ClusterSecretStores (1) → microservices + redis (2).
+This installs ArgoCD via Helm and applies `bootstrap/root-app.yaml`. ArgoCD then manages everything else automatically.
 
-## Local validation
+---
 
-No cluster needed:
+## Local Validation
 
 ```bash
-# Render + schema-validate a service for an environment
+# Render and validate a service for production
 helm template charts/microservice \
-  -f charts/microservice/values.yaml \
   -f global-values.yaml \
   -f services/appointment-service/values.yaml \
-  -f services/appointment-service/values-prod.yaml \
-  | kubeconform -strict -ignore-missing-schemas
+  -f services/appointment-service/values-prod.yaml | kubeconform -strict -ignore-missing-schemas
 
-# Lint (pass global-values for the registry + a service's values — the chart requires .Values.name)
+# Lint the chart with service values
 helm lint charts/microservice \
   -f global-values.yaml \
-  -f services/appointment-service/values.yaml -f services/appointment-service/values-dev.yaml
-helm lint charts/redis -f services/redis/values.yaml
+  -f services/appointment-service/values.yaml \
+  -f services/appointment-service/values-dev.yaml
 
-# Preview the Applications an ApplicationSet would generate
+# Preview what Applications an ApplicationSet would generate
 argocd appset generate argocd/applicationsets/services-prod.yaml
 ```
-
-## Operational notes / known follow-ups (in lablumen-terraform)
-
-- `lablumen-dev` namespace + dev IRSA ServiceAccounts (trust subject
-  `system:serviceaccount:lablumen-dev:<svc>`) for report/notification dev AWS access.
-- ESO ServiceAccount must be named `lablumen-eso` (SA + IRSA trust subject).
-
-See `../extras/CLAUDE.md` for the full architectural contract and decision log.
-#
-#
